@@ -17,6 +17,7 @@
 import sys
 
 from backend.core.capability import all_capabilities, run_capability
+from backend.parsing.parse_demo import FIXTURE as SAMPLE_FILE
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -28,14 +29,20 @@ def main() -> None:
 
     passed = 0
     for cap in caps:
-        r = run_capability(cap.id)
+        # 上传类能力必须真给一个文件，否则测的只是「参数缺失」而不是实现本身
+        参数 = (
+            {"file_path": str(SAMPLE_FILE), "display_name": "mineru_raw_sample.json"}
+            if cap.needs_file
+            else {}
+        )
+        r = run_capability(cap.id, 参数)
 
-        # ② 执行不崩溃；尤其不能出现「找不到实现」这类注册表漂移
-        if not r.ok and "找不到实现" in str(r.result.get("error", "")):
-            print(f"  [!!] {cap.id:13} target 失效：{r.result['error']}")
+        # ② 执行必须成功；失败一律视为问题（不再只盯「找不到实现」）
+        if not r.ok:
+            print(f"  [!!] {cap.id:13} 执行失败：{r.result.get('error')}")
             continue
 
-        print(f"  [OK] {cap.id:13} ok={r.ok} 后端耗时={r.elapsed_ms}ms")
+        print(f"  [OK] {cap.id:13} 后端耗时={r.elapsed_ms}ms")
         passed += 1
 
         # ③ 对数据契约自检额外校验结果本身

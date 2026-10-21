@@ -88,6 +88,33 @@ _REGISTRY: list[Capability] = [
         needs_file=True,
         observation="上传页的「命中已有版本」提示就来自这里（docs/05 CAP-M1-02）",
     ),
+    Capability(
+        id="CAP-M1-03",
+        module="M1",
+        name="MinerU 解析（内置样例）",
+        summary="用仿真的 MinerU 输出跑一遍翻译，看到带类型的 Block 列表",
+        target="backend.parsing.parse_demo.parse_sample",
+        observation="文档详情页的结构化视图（按 block.type 着色）将来消费它",
+    ),
+    Capability(
+        id="CAP-M1-04",
+        module="M1",
+        name="坐标归一化对照",
+        summary="看某一块的原始像素坐标与 0~1 归一化坐标的区别",
+        target="backend.parsing.parse_demo.locator_demo",
+        params=[
+            {"name": "idx", "label": "第几块（0 起）", "type": "number", "default": 1},
+        ],
+        observation="前端高亮框能对准原文，靠的就是归一化坐标",
+    ),
+    Capability(
+        id="CAP-M1-05",
+        module="M1",
+        name="解析质量评分",
+        summary="给解析结果打分，并说明是哪一项拖低了分数",
+        target="backend.parsing.parse_demo.quality_demo",
+        observation="上传页的「解析质量分」+ 分项明细（docs/05 CAP-M1-05）",
+    ),
 ]
 
 

@@ -1,0 +1,57 @@
+{
+  "pdf_info": [
+    {
+      "page_idx": 0,
+      "page_size": [595.0, 842.0],
+      "para_blocks": [
+        {
+          "type": "header",
+          "bbox": [78.0, 40.0, 520.0, 60.0],
+          "lines": [{"spans": [{"content": "机密 · 合同审核专用"}]}]
+        },
+        {
+          "type": "title",
+          "bbox": [78.0, 95.0, 520.0, 130.0],
+          "text_level": 1,
+          "lines": [{"spans": [{"content": "第三章 违约责任"}]}]
+        },
+        {
+          "type": "text",
+          "bbox": [78.0, 140.0, 520.0, 200.0],
+          "lines": [
+            {"spans": [{"content": "乙方未按期交付的，应"}]},
+            {"spans": [{"content": "按日千分之三支付违约金。"}]}
+          ]
+        },
+        {
+          "type": "table",
+          "bbox": [78.0, 210.0, 520.0, 320.0],
+          "html": "<table><tr><td>货款</td><td>10000</td></tr></table>",
+          "lines": [{"spans": [{"content": "货款 10000"}]}]
+        },
+        {
+          "type": "text",
+          "bbox": [78.0, 330.0, 520.0, 340.0],
+          "lines": [{"spans": [{"content": "   "}]}]
+        },
+        {
+          "type": "footer",
+          "bbox": [78.0, 800.0, 520.0, 820.0],
+          "lines": [{"spans": [{"content": "第 1 页 共 3 页"}]}]
+        }
+      ]
+    },
+    {
+      "page_idx": 1,
+      "page_size": [595.0, 842.0],
+      "para_blocks": [
+        {
+          "type": "interline_equation",
+          "bbox": [200.0, 1500.0, 395.0, 1540.0],
+          "latex": "\\frac{a}{b}",
+          "lines": [{"spans": [{"content": "a/b"}]}]
+        }
+      ]
+    }
+  ]
+}
