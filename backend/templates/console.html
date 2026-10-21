@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>能力探针台 · /console</title>
+<style>
+  /* ---------- 基础 ---------- */
+  :root{
+    --bg:#f5f6fa; --card:#fff; --line:#e4e7ef; --ink:#1f2330; --muted:#6b7280;
+    --brand:#4f46e5; --brand-soft:#eef0fe; --ok:#0f9d58; --bad:#d93025;
+    --mono:ui-monospace,SFMono-Regular,Consolas,"Cascadia Mono","Courier New",monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.6 "Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+  }
+  code,.mono{font-family:var(--mono); font-size:.92em}
+
+  /* ---------- 顶栏 ---------- */
+  header{
+    background:var(--card); border-bottom:1px solid var(--line);
+    padding:14px 24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    position:sticky; top:0; z-index:10;
+  }
+  header h1{margin:0; font-size:18px; letter-spacing:.5px}
+  header h1 small{color:var(--muted); font-weight:400; font-size:13px; margin-left:6px}
+  #env{margin-left:auto; font-size:13px; color:var(--muted); display:flex; align-items:center; gap:8px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .dot.ok{background:var(--ok); box-shadow:0 0 0 4px rgba(15,157,88,.15)}
+  .dot.bad{background:var(--bad); box-shadow:0 0 0 4px rgba(217,48,37,.15)}
+
+  /* ---------- 两栏布局 ---------- */
+  main{display:grid; grid-template-columns:290px 1fr; gap:18px; padding:18px 24px 40px; align-items:start}
+  @media (max-width:900px){ main{grid-template-columns:1fr} }
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px}
+  .card h2{margin:0 0 4px; font-size:17px}
+  .card h3{margin:18px 0 8px; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px}
+  .muted{color:var(--muted); font-size:13px}
+
+  /* ---------- 左栏：能力树 ---------- */
+  #tree{padding:10px}
+  .group{margin-bottom:14px}
+  .group-title{
+    font-size:11px; font-weight:700; color:var(--muted);
+    letter-spacing:1px; padding:6px 10px;
+  }
+  .cap{
+    display:block; width:100%; text-align:left; cursor:pointer;
+    border:1px solid transparent; background:none; border-radius:8px;
+    padding:8px 10px; margin-bottom:2px; font:inherit; color:inherit;
+  }
+  .cap:hover{background:#f1f2f7}
+  .cap.active{background:var(--brand-soft); border-color:#c7cbf7}
+  .cap code{display:block; color:var(--brand); font-weight:600}
+  .cap span{font-size:14px}
+
+  /* ---------- 右栏：参数表单 ---------- */
+  label{display:block; font-size:13px; font-weight:600; margin:10px 0 4px}
+  label i{color:var(--bad); font-style:normal}
+  input{
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px;
+    font:inherit; background:#fbfbfd;
+  }
+  input:focus{outline:2px solid #c7cbf7; border-color:var(--brand)}
+
+  button.run{
+    margin-top:16px; padding:9px 22px; border:0; border-radius:8px; cursor:pointer;
+    background:var(--brand); color:#fff; font:inherit; font-weight:600;
+  }
+  button.run:hover{background:#4338ca}
+  button.run:disabled{background:#a5a6f0; cursor:progress}
+
+  /* ---------- 右栏：响应观测区 ---------- */
+  .badge{
+    display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px;
+    background:#eef0f3; color:var(--muted); margin-right:6px; font-weight:600;
+  }
+  .badge.ok{background:#e6f4ea; color:var(--ok)}
+  .badge.bad{background:#fce8e6; color:var(--bad)}
+  pre#json{
+    margin:0; padding:14px; background:#1f2330; color:#e6e8f0; border-radius:10px;
+    font-family:var(--mono); font-size:13px; line-height:1.55;
+    overflow:auto; max-height:520px; white-space:pre-wrap; word-break:break-word;
+  }
+  footer{padding:0 24px 30px; color:var(--muted); font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>能力探针台 <small>/console · 看得到中间过程，才叫看得懂后端</small></h1>
+  <div id="env"><span class="dot bad"></span>正在连接后端…</div>
+</header>
+
+<main>
+  <!-- 左栏：能力清单，内容由 /capabilities 自动生成 -->
+  <aside class="card" id="tree"><div class="muted">加载中…</div></aside>
+
+  <!-- 右栏：上半是能力说明与参数，下半是响应观测 -->
+  <section id="detail">
+    <div class="card"><p class="muted">← 先在左边选一条能力</p></div>
+  </section>
+</main>
+
+<footer>
+  数据来源：<code>GET /capabilities</code>（后端注册表）· 执行：<code>POST /capabilities/{id}/run</code> · 页面本体由 <code>backend/main.py</code> 直接返回
+</footer>
+
+<script>
+/* ============================================================
+   整个页面的逻辑只有三步：
+   ① 打开页面 → 问后端要能力清单 → 渲染左栏
+   ② 点一条能力 → 把它的说明和参数表单渲染到右栏
+   ③ 点「执行」 → 把参数发给后端 → 把原始返回显示在下面
+   ============================================================ */
+
+const state = { caps: [], current: null };
+
+/* ---------- ① 加载 ---------- */
+async function loadHealth() {
+  const env = document.getElementById('env');
+  try {
+    const d = await (await fetch('/health')).json();
+    env.innerHTML = `<span class="dot ok"></span>服务正常 · 已注册能力 <b>${d.capabilities}</b> 条`;
+  } catch (e) {
+    env.innerHTML = `<span class="dot bad"></span>连不上后端 —— 服务没启动？先跑 <code>python -m backend.main</code>`;
+  }
+}
+
+async function loadCaps() {
+  const box = document.getElementById('tree');
+  try {
+    const d = await (await fetch('/capabilities')).json();
+    state.caps = d.items;
+    renderTree();
+  } catch (e) {
+    box.innerHTML = `<p class="muted">加载失败：${e}</p>`;
+  }
+}
+
+/* ---------- 左栏 ---------- */
+function renderTree() {
+  const groups = {};
+  state.caps.forEach(c => { if (!groups[c.module]) groups[c.module] = []; groups[c.module].push(c); });
+
+  document.getElementById('tree').innerHTML = Object.keys(groups).map(mod => `
+    <div class="group">
+      <div class="group-title">${mod}</div>
+      ${groups[mod].map(c => `
+        <button class="cap" data-id="${c.id}" onclick="select('${c.id}')">
+          <code>${c.id}</code><span>${c.name}</span>
+        </button>`).join('')}
+    </div>`).join('');
+}
+
+/* ---------- ② 选中一条能力 ---------- */
+function select(id) {
+  state.current = state.caps.find(c => c.id === id);
+  document.querySelectorAll('.cap').forEach(b => b.classList.toggle('active', b.dataset.id === id));
+  renderDetail();
+}
+
+function renderDetail() {
+  const c = state.current;
+
+  // 参数表单完全由后端给的 params 描述生成 —— 加能力不用改这里
+  const form = c.params.length
+    ? c.params.map(p => `
+        <label>${p.label || p.name}${p.required ? ' <i>*</i>' : ''}
+          <input id="p_${p.name}" type="${p.type || 'text'}"
+                 value="${p.default === undefined ? '' : p.default}"
+                 placeholder="${p.placeholder || ''}">
+        </label>`).join('')
+    : '<p class="muted">此能力无需参数，直接执行。</p>';
+
+  document.getElementById('detail').innerHTML = `
+    <div class="card">
+      <h2>${c.name} <code>${c.id}</code></h2>
+      <p>${c.summary}</p>
+      <p class="muted">实现入口：<code>${c.target}</code></p>
+      ${c.observation ? `<p class="muted">观测位置：${c.observation}</p>` : ''}
+      <h3>参数</h3>
+      ${form}
+      <button class="run" onclick="run()">执行</button>
+    </div>
+    <div class="card" id="resultCard" hidden>
+      <h3>响应观测区 <span id="meta"></span></h3>
+      <pre id="json"></pre>
+    </div>`;
+}
+
+/* ---------- ③ 执行 ---------- */
+async function run() {
+  const c = state.current;
+  const params = {};
+  c.params.forEach(p => {
+    const v = document.getElementById('p_' + p.name).value;
+    if (v !== '') params[p.name] = (p.type === 'number') ? Number(v) : v;
+  });
+
+  const btn = document.querySelector('button.run');
+  btn.disabled = true; btn.textContent = '执行中…';
+  const t0 = performance.now();
+  try {
+    const res = await fetch(`/capabilities/${c.id}/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    const d = await res.json();
+    showResult(d, Math.round(performance.now() - t0));
+  } catch (e) {
+    showResult({ ok: false, error: String(e) }, 0);
+  } finally {
+    btn.disabled = false; btn.textContent = '执行';
+  }
+}
+
+function showResult(d, wallMs) {
+  document.getElementById('resultCard').hidden = false;
+  const ok = d.ok === true;
+  document.getElementById('meta').innerHTML =
+    `<span class="badge ${ok ? 'ok' : 'bad'}">${ok ? '成功' : '失败'}</span>` +
+    `<span class="badge">后端耗时 ${d.elapsed_ms ?? '?'} ms</span>` +
+    `<span class="badge">总耗时 ${wallMs} ms</span>`;
+  document.getElementById('json').textContent = JSON.stringify(d, null, 2);
+}
+
+/* ---------- 启动 ---------- */
+loadHealth();
+loadCaps();
+</script>
+</body>
+</html>
