@@ -115,6 +115,26 @@ _REGISTRY: list[Capability] = [
         target="backend.parsing.parse_demo.quality_demo",
         observation="上传页的「解析质量分」+ 分项明细（docs/05 CAP-M1-05）",
     ),
+    Capability(
+        id="CAP-M2-01",
+        module="M2",
+        name="章节树构建",
+        summary="把平铺的 Block 组织成有层级的章节树（推不出层级的如实标 null）",
+        target="backend.representation.structure_demo.tree_demo",
+        observation="前端左栏的文档树（docs/05 CAP-M2-01）",
+    ),
+    Capability(
+        id="CAP-M2-02",
+        module="M2",
+        name="结构优先切片",
+        summary="按章节切块并注入章节前缀；把 max_chars 调小可看切片数量变化",
+        target="backend.representation.structure_demo.chunk_demo",
+        params=[
+            {"name": "max_chars", "label": "每片最大字符数", "type": "number", "default": 500},
+            {"name": "overlap", "label": "相邻重叠字符数", "type": "number", "default": 80},
+        ],
+        observation="文档树下方的 chunk 列表，显示 token 数（docs/05 CAP-M2-02）",
+    ),
 ]
 
 

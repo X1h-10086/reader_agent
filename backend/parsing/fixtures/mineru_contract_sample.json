@@ -1,0 +1,85 @@
+{
+  "pdf_info": [
+    {
+      "page_idx": 0,
+      "page_size": [595.0, 842.0],
+      "para_blocks": [
+        {
+          "type": "title",
+          "text_level": 1,
+          "bbox": [78.0, 95.0, 520.0, 130.0],
+          "lines": [{"spans": [{"content": "3 责任"}]}]
+        },
+        {
+          "type": "text",
+          "bbox": [78.0, 140.0, 520.0, 170.0],
+          "lines": [{"spans": [{"content": "本章约定交付、验收与违约三方面的责任。"}]}]
+        },
+        {
+          "type": "title",
+          "text_level": 2,
+          "bbox": [78.0, 180.0, 520.0, 210.0],
+          "lines": [{"spans": [{"content": "3.2 验收"}]}]
+        },
+        {
+          "type": "text",
+          "bbox": [78.0, 220.0, 520.0, 250.0],
+          "lines": [{"spans": [{"content": "甲方应在收到设备后十五个工作日内完成验收。"}]}]
+        },
+        {
+          "type": "text",
+          "bbox": [78.0, 260.0, 520.0, 290.0],
+          "lines": [{"spans": [{"content": "验收标准以附件一《技术规格书》为准。"}]}]
+        },
+        {
+          "type": "text",
+          "bbox": [78.0, 300.0, 520.0, 330.0],
+          "lines": [{"spans": [{"content": "逾期未提出书面异议的，视为验收合格。"}]}]
+        },
+        {
+          "type": "title",
+          "text_level": 2,
+          "bbox": [78.0, 340.0, 520.0, 370.0],
+          "lines": [{"spans": [{"content": "3.3 违约责任"}]}]
+        },
+        {
+          "type": "text",
+          "bbox": [78.0, 380.0, 520.0, 410.0],
+          "lines": [{"spans": [{"content": "乙方逾期交付的，每逾期一日按合同总价的千分之三支付违约金。"}]}]
+        },
+        {
+          "type": "text",
+          "bbox": [78.0, 420.0, 520.0, 450.0],
+          "lines": [{"spans": [{"content": "违约金累计不超过合同总价的百分之二十。"}]}]
+        }
+      ]
+    },
+    {
+      "page_idx": 1,
+      "page_size": [595.0, 842.0],
+      "para_blocks": [
+        {
+          "type": "text",
+          "bbox": [78.0, 95.0, 520.0, 125.0],
+          "lines": [{"spans": [{"content": "甲方逾期付款的，参照前款约定承担违约责任。"}]}]
+        },
+        {
+          "type": "text",
+          "bbox": [78.0, 135.0, 520.0, 165.0],
+          "lines": [{"spans": [{"content": "因不可抗力导致不能履行的，双方互不承担违约责任。"}]}]
+        },
+        {
+          "type": "table",
+          "bbox": [78.0, 180.0, 520.0, 280.0],
+          "html": "<table><tr><th>项目</th><th>金额</th></tr><tr><td>货款</td><td>10000</td></tr></table>",
+          "lines": [{"spans": [{"content": "项目 金额 货款 10000"}]}]
+        },
+        {
+          "type": "footer",
+          "bbox": [78.0, 800.0, 520.0, 820.0],
+          "lines": [{"spans": [{"content": "第 2 页"}]}]
+        }
+      ]
+    }
+  ]
+}
