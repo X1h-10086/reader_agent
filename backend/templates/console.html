@@ -166,15 +166,25 @@ function select(id) {
 function renderDetail() {
   const c = state.current;
 
-  // 参数表单完全由后端给的 params 描述生成 —— 加能力不用改这里
-  const form = c.params.length
-    ? c.params.map(p => `
+  // 表单完全由后端给的描述生成 —— 加能力不用改这里
+  // needs_file=true 时显示文件选择框；否则按 params 渲染输入框
+  let form;
+  if (c.needs_file) {
+    form = `
+      <label>选择文件 <i>*</i>
+        <input id="fileInput" type="file" style="padding:7px;background:#fff">
+      </label>
+      <p class="muted">服务端会先把它落到临时文件，验完即删，不会留在磁盘上。</p>`;
+  } else if (c.params.length) {
+    form = c.params.map(p => `
         <label>${p.label || p.name}${p.required ? ' <i>*</i>' : ''}
           <input id="p_${p.name}" type="${p.type || 'text'}"
                  value="${p.default === undefined ? '' : p.default}"
                  placeholder="${p.placeholder || ''}">
-        </label>`).join('')
-    : '<p class="muted">此能力无需参数，直接执行。</p>';
+        </label>`).join('');
+  } else {
+    form = '<p class="muted">此能力无需参数，直接执行。</p>';
+  }
 
   document.getElementById('detail').innerHTML = `
     <div class="card">
@@ -195,21 +205,32 @@ function renderDetail() {
 /* ---------- ③ 执行 ---------- */
 async function run() {
   const c = state.current;
-  const params = {};
-  c.params.forEach(p => {
-    const v = document.getElementById('p_' + p.name).value;
-    if (v !== '') params[p.name] = (p.type === 'number') ? Number(v) : v;
-  });
-
   const btn = document.querySelector('button.run');
   btn.disabled = true; btn.textContent = '执行中…';
   const t0 = performance.now();
+
   try {
-    const res = await fetch(`/capabilities/${c.id}/run`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params)
-    });
+    let res;
+    if (c.needs_file) {
+      // 上传类能力：走 multipart，不能用 JSON
+      const f = document.getElementById('fileInput').files[0];
+      if (!f) { alert('请先选择一个文件'); return; }
+      const fd = new FormData();
+      fd.append('file', f);
+      res = await fetch(`/capabilities/${c.id}/run-upload`, { method: 'POST', body: fd });
+    } else {
+      // 普通能力：把表单里的输入拼成 JSON
+      const params = {};
+      c.params.forEach(p => {
+        const v = document.getElementById('p_' + p.name).value;
+        if (v !== '') params[p.name] = (p.type === 'number') ? Number(v) : v;
+      });
+      res = await fetch(`/capabilities/${c.id}/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+    }
     const d = await res.json();
     showResult(d, Math.round(performance.now() - t0));
   } catch (e) {

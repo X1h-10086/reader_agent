@@ -17,12 +17,15 @@
 
 from __future__ import annotations
 
+import os
+import shutil
+import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse
 
-from backend.core.capability import all_capabilities, run_capability
+from backend.core.capability import all_capabilities, get_capability, run_capability
 
 # 页面模板放在 backend/templates/ 下，用绝对路径读，免得换台机器就跑偏
 TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
@@ -55,6 +58,36 @@ def capabilities(module: str | None = None) -> dict:
 def capability_run(cap_id: str, params: dict | None = None) -> dict:
     """执行一条能力，返回统一回执（含耗时）。"""
     return run_capability(cap_id, params).model_dump()
+
+
+@app.post("/capabilities/{cap_id}/run-upload")
+def capability_run_upload(cap_id: str, file: UploadFile = File(...)) -> dict:
+    """上传文件后执行能力（CAP-M1-01/02 走这条）。
+
+    这就是「服务员」的标准动作：
+        接住上传 → 落到临时文件 → 把路径递给厨师 → 端走结果 → 擦干净桌子
+    """
+    cap = get_capability(cap_id)
+    if cap is None:
+        return run_capability(cap_id).model_dump()      # 复用统一的「没有这条能力」
+    if not cap.needs_file:
+        return {
+            "capability_id": cap_id, "ok": False, "elapsed_ms": 0.0,
+            "result": {"error": f"{cap_id} 不需要文件，请走 /run 接口"},
+        }
+
+    # 后缀只是给临时文件用；真正的格式判断在 ingest 里靠文件头
+    后缀 = Path(file.filename or "").suffix
+    with tempfile.NamedTemporaryFile(delete=False, suffix=后缀) as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        临时路径 = tmp.name
+
+    try:
+        return run_capability(
+            cap_id, {"file_path": 临时路径, "display_name": file.filename}
+        ).model_dump()
+    finally:
+        os.unlink(临时路径)      # 无论成败都清理，别在盘上留垃圾
 
 
 @app.get("/console", response_class=HTMLResponse)

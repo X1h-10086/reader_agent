@@ -29,6 +29,7 @@ class Capability(BaseModel):
     summary: str = Field(..., description="这句话会原样显示在页面上")
     target: str = Field(..., description="实现入口，形如 包.模块.函数名")
     params: list[dict] = Field(default_factory=list, description="参数表单描述，前端据此自动生成输入框")
+    needs_file: bool = Field(default=False, description="是否需要上传文件（前端改为显示文件选择框）")
     observation: str = Field(default="", description="执行成功后，你能在哪里看到效果")
 
 
@@ -68,6 +69,24 @@ _REGISTRY: list[Capability] = [
             },
         ],
         observation="枚举单一来源的守门实验；全系统的等级都由 backend/core/enums.py 这一份清单管着",
+    ),
+    Capability(
+        id="CAP-M1-01",
+        module="M1",
+        name="多格式识别（验身）",
+        summary="上传一个文件，看它真实是什么格式、后缀有没有撒谎、会不会被放行",
+        target="backend.parsing.inspect_ops.sniff",
+        needs_file=True,
+        observation="上传页的「识别到的格式」徽标就来自这里（docs/05 CAP-M1-01）",
+    ),
+    Capability(
+        id="CAP-M1-02",
+        module="M1",
+        name="文件去重（指纹）",
+        summary="同一份文件上传两次，第二次直接复用，不再解析",
+        target="backend.parsing.inspect_ops.dedup",
+        needs_file=True,
+        observation="上传页的「命中已有版本」提示就来自这里（docs/05 CAP-M1-02）",
     ),
 ]
 
